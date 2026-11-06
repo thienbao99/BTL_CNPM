@@ -1,0 +1,9 @@
+{% extends "layout/base.html" %}
+{% block title %}Hóa đơn thanh toán{% endblock %}
+{% block content %}
+<h1>Hóa đơn thanh toán</h1>
+<p>Công thức dự kiến: tiền phòng + dịch vụ – giảm giá + VAT 10% (theo quy tắc nhóm thống nhất).</p>
+<table><thead><tr><th>Mã hóa đơn</th><th>Tiền phòng</th><th>Tiền dịch vụ</th><th>VAT</th><th>Tổng tiền</th><th>Trạng thái</th></tr></thead>
+<tbody>{% for i in invoices %}<tr><td>{{ i.id }}</td><td>{{ i.room_amount }}</td><td>{{ i.service_amount }}</td><td>{{ i.vat_amount }}</td><td>{{ i.total_amount }}</td><td>{{ i.status }}</td></tr>
+{% else %}<tr><td colspan="6">Chưa có hóa đơn.</td></tr>{% endfor %}</tbody></table>
+{% endblock %}

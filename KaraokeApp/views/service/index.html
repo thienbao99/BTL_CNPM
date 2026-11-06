@@ -1,0 +1,62 @@
+
+{% extends 'layout/base.html' %}
+
+{% block title %}
+Quản lý dịch vụ
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <h2 class="text-center mb-4">
+        DANH SÁCH DỊCH VỤ
+    </h2>
+
+    <div class="row">
+
+        {% for s in services %}
+
+        <div class="col-md-3 col-12 p-2">
+
+            <div class="card shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <h5 class="card-title">
+                        {{ s.service_name }}
+                    </h5>
+
+                    <p class="card-text">
+                        Danh mục: {{ s.category }}
+                    </p>
+
+                    <p class="text-danger fw-bold">
+                        {{ "{:,.0f}".format(s.unit_price or 0) }} VNĐ
+                    </p>
+
+                    <span class="badge bg-success">
+                        Đang kinh doanh
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% else %}
+
+        <div class="col-12">
+            <div class="alert alert-info">
+                Chưa có dịch vụ nào!
+            </div>
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "layout/base.html" %}
+{% block title %}Chi tiết phòng{% endblock %}
+{% block content %}
+<h1>{{ room.room_name }}</h1>
+<p>Loại phòng: {{ room.room_type }}</p>
+<p>Sức chứa: {{ room.capacity }} người</p>
+<p>Giá thuê: {{ "{:,.0f}".format(room.hourly_price or 0) }} đ/giờ</p>
+<p>Trạng thái: {{ room.status }}</p>
+<a href="{{ url_for('booking.create') }}">Đặt phòng</a>
+{% endblock %}

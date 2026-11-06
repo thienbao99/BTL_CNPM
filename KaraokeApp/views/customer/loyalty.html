@@ -1,0 +1,9 @@
+{% extends "layout/base.html" %}
+{% block title %}Thẻ khách hàng thân thiết{% endblock %}
+{% block content %}
+<h1>Thẻ khách hàng thân thiết</h1>
+<p>Điều kiện dự kiến: khách có từ 10 lượt hát trong tháng được cấp thẻ giảm 5%.</p>
+<table><thead><tr><th>Mã thẻ</th><th>Khách hàng</th><th>Mức giảm</th><th>Ngày cấp</th><th>Trạng thái</th></tr></thead>
+<tbody>{% for card in cards %}<tr><td>{{ card.card_code }}</td><td>{{ card.customer.full_name }}</td><td>{{ card.discount_percent }}%</td><td>{{ card.issued_at.strftime("%d/%m/%Y") }}</td><td>{{ "Hoạt động" if card.is_active else "Ngừng" }}</td></tr>
+{% else %}<tr><td colspan="5">Chưa có thẻ thành viên.</td></tr>{% endfor %}</tbody></table>
+{% endblock %}

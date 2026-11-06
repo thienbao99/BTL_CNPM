@@ -1,0 +1,21 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Arial, sans-serif; color: #252525; background: #f5f6fa; }
+.container { width: min(1100px, 92%); margin: 0 auto; }
+.site-header { background: #24152f; color: white; padding: 16px 0; }
+.nav { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
+.brand { color: white; font-size: 22px; font-weight: bold; text-decoration: none; }
+nav { display: flex; gap: 14px; flex-wrap: wrap; }
+nav a { color: white; text-decoration: none; }
+main.container { min-height: 75vh; padding-top: 28px; padding-bottom: 40px; }
+h1 { color: #382044; }
+table { width: 100%; border-collapse: collapse; background: white; margin-top: 16px; }
+th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+th { background: #eee8f2; }
+.form { display: grid; gap: 14px; max-width: 520px; }
+.form label { display: grid; gap: 6px; }
+input, select { padding: 10px; border: 1px solid #bbb; border-radius: 5px; }
+button, .button { display: inline-block; padding: 10px 16px; border: 0; border-radius: 5px; background: #6b3c82; color: white; text-decoration: none; cursor: pointer; }
+.alert { padding: 12px; margin: 12px 0; border-radius: 5px; background: #eee; }
+.alert.success { background: #d9f4df; }
+.alert.danger { background: #ffe0e0; }
+.site-footer { padding: 18px 0; background: #24152f; color: white; text-align: center; }

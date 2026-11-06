@@ -1,0 +1,4 @@
+[
+  {"room_name": "P101", "room_type": "Standard", "capacity": 10, "hourly_price": 150000},
+  {"room_name": "P102", "room_type": "VIP", "capacity": 15, "hourly_price": 250000}
+]

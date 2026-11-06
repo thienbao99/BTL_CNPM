@@ -1,0 +1,52 @@
+
+{% extends 'layout/base.html' %}
+
+{% block title %}
+Báo cáo doanh thu
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <h2 class="text-center mb-4">
+        BÁO CÁO DOANH THU THEO PHÒNG
+    </h2>
+
+    <table class="table table-bordered table-striped">
+
+        <thead class="table-dark">
+            <tr>
+                <th>STT</th>
+                <th>Tên phòng</th>
+                <th>Doanh thu</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            {% for r in rows %}
+
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ r.room_name }}</td>
+                <td>{{ "{:,.0f}".format(r.revenue or 0) }} VNĐ</td>
+            </tr>
+
+            {% else %}
+
+            <tr>
+                <td colspan="3" class="text-center">
+                    Chưa có dữ liệu doanh thu
+                </td>
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}

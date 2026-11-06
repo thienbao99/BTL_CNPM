@@ -1,0 +1,96 @@
+
+{% extends 'layout/base.html' %}
+
+{% block title %}
+Đặt phòng hát
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <h2 class="text-center mb-4">
+        ĐĂNG KÝ ĐẶT PHÒNG HÁT
+    </h2>
+
+    <div class="card shadow p-4">
+
+        <form method="POST">
+
+            <div class="mb-3">
+                <label class="form-label">Họ tên khách hàng</label>
+                <input type="text"
+                       name="customer_name"
+                       class="form-control"
+                       required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Số điện thoại</label>
+                <input type="text"
+                       name="customer_phone"
+                       class="form-control">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Chọn phòng hát</label>
+
+                <select name="room_id" class="form-select" required>
+
+                    {% for room in rooms %}
+
+                    <option value="{{ room.id }}">
+                        {{ room.room_name }}
+                        - {{ room.hourly_price }} VNĐ/giờ
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Số lượng khách</label>
+
+                <input type="number"
+                       name="guest_count"
+                       class="form-control"
+                       min="1"
+                       max="15"
+                       required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Thời gian bắt đầu</label>
+
+                <input type="datetime-local"
+                       name="start_time"
+                       class="form-control"
+                       required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Thời gian kết thúc</label>
+
+                <input type="datetime-local"
+                       name="end_time"
+                       class="form-control"
+                       required>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                Xác nhận đặt phòng
+            </button>
+
+            <a href="{{ url_for('room.index') }}"
+               class="btn btn-secondary">
+                Quay lại
+            </a>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

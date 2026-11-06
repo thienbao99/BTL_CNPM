@@ -1,0 +1,8 @@
+{% extends "layout/base.html" %}
+{% block title %}Khách hàng{% endblock %}
+{% block content %}
+<h1>Quản lý khách hàng</h1>
+<table><thead><tr><th>Họ tên</th><th>Số điện thoại</th><th>Email</th></tr></thead>
+<tbody>{% for c in customers %}<tr><td>{{ c.full_name }}</td><td>{{ c.phone }}</td><td>{{ c.email or "" }}</td></tr>
+{% else %}<tr><td colspan="3">Chưa có khách hàng.</td></tr>{% endfor %}</tbody></table>
+{% endblock %}
