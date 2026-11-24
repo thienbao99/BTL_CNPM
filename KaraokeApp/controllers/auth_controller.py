@@ -1,7 +1,6 @@
-from flask import Blueprint, render_template
+from flask import render_template
 
-auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
-
-@auth_bp.route("/login")
-def login():
-    return render_template("auth/login.html")
+def init_auth_routes(app):
+    @app.route("/auth/login")
+    def auth_login():
+        return render_template("auth/login.html")

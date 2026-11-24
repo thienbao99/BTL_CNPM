@@ -1,9 +1,123 @@
-{% extends "layout/base.html" %}
-{% block title %}Thẻ khách hàng thân thiết{% endblock %}
+{% extends 'layout/base.html' %}
+
+{% block title %}
+Quản lý thẻ thân thiết - KaraokeApp
+{% endblock %}
+
 {% block content %}
-<h1>Thẻ khách hàng thân thiết</h1>
-<p>Điều kiện dự kiến: khách có từ 10 lượt hát trong tháng được cấp thẻ giảm 5%.</p>
-<table><thead><tr><th>Mã thẻ</th><th>Khách hàng</th><th>Mức giảm</th><th>Ngày cấp</th><th>Trạng thái</th></tr></thead>
-<tbody>{% for card in cards %}<tr><td>{{ card.card_code }}</td><td>{{ card.customer.full_name }}</td><td>{{ card.discount_percent }}%</td><td>{{ card.issued_at.strftime("%d/%m/%Y") }}</td><td>{{ "Hoạt động" if card.is_active else "Ngừng" }}</td></tr>
-{% else %}<tr><td colspan="5">Chưa có thẻ thành viên.</td></tr>{% endfor %}</tbody></table>
+<div class="container my-4">
+    <!-- Tiêu đề -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #24152f;">
+                <i class="bi bi-award-fill me-2 text-warning"></i>QUẢN LÝ THẺ KHÁCH HÀNG THÂN THIẾT
+            </h2>
+            <p class="text-muted mb-0">Danh sách thẻ ưu đãi thành viên VIP (Giảm giá 5% cho khách hàng đạt từ 10 lượt hát trong tháng)</p>
+        </div>
+        <div class="mt-2 mt-md-0">
+            <a href="{{ url_for('customer_index') }}" class="btn btn-outline-primary fw-semibold">
+                <i class="bi bi-arrow-left me-1"></i> Danh sách khách hàng
+            </a>
+        </div>
+    </div>
+
+    <!-- Quy định chính sách -->
+    <div class="alert alert-info border-0 shadow-sm d-flex align-items-center mb-4">
+        <i class="bi bi-info-circle-fill fs-3 text-info me-3"></i>
+        <div>
+            <strong class="d-block">Chính sách Thẻ thân thiết (VIP Loyalty):</strong>
+            Khách hàng có tổng số lượt hát từ <strong>10 lượt trong tháng</strong> sẽ được xét cấp Thẻ khách hàng thân thiết với mức chiết khấu <strong>5%</strong> trên toàn bộ hóa đơn thanh toán.
+        </div>
+    </div>
+
+    <!-- Bảng danh sách thẻ -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <span class="fw-bold text-secondary">
+                <i class="bi bi-card-checklist me-1"></i> Tổng số thẻ: <strong>{{ cards|length }}</strong>
+            </span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center" style="width: 60px;">STT</th>
+                        <th>Mã thẻ VIP</th>
+                        <th>Khách hàng</th>
+                        <th>Số điện thoại</th>
+                        <th class="text-center">Mức chiết khấu</th>
+                        <th>Ngày cấp</th>
+                        <th class="text-center">Trạng thái</th>
+                        <th class="text-center" style="width: 160px;">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for card in cards %}
+                    <tr>
+                        <td class="text-center text-muted fw-bold">{{ loop.index }}</td>
+                        <td>
+                            <code class="fw-bold fs-6 text-dark px-2 py-1 bg-light border rounded">
+                                <i class="bi bi-qr-code me-1 text-primary"></i>{{ card.card_code }}
+                            </code>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('customer_detail', customer_id=card.customer.id) }}" class="fw-bold text-decoration-none text-dark">
+                                {{ card.customer.full_name }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="font-monospace text-secondary">{{ card.customer.phone }}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-danger-subtle text-danger border border-danger fw-bold fs-6 px-3">
+                                -{{ "{:,.0f}".format(card.discount_percent or 0) }}%
+                            </span>
+                        </td>
+                        <td class="text-muted">
+                            {{ card.issued_at.strftime('%d/%m/%Y %H:%M') if card.issued_at else '---' }}
+                        </td>
+                        <td class="text-center">
+                            {% if card.is_active %}
+                                <span class="badge bg-success-subtle text-success border border-success fw-semibold">
+                                    <i class="bi bi-check-circle-fill me-1"></i>Đang hoạt động
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary fw-semibold">
+                                    <i class="bi bi-pause-circle-fill me-1"></i>Tạm khóa
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-1">
+                                <a href="{{ url_for('customer_detail', customer_id=card.customer.id) }}"
+                                   class="btn btn-sm btn-outline-info text-dark"
+                                   title="Xem hồ sơ khách hàng">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <form method="POST"
+                                      action="{{ url_for('customer_toggle_loyalty_status', card_id=card.id) }}"
+                                      style="display: inline-block;">
+                                    <button type="submit"
+                                            class="btn btn-sm {% if card.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}"
+                                            title="{% if card.is_active %}Tạm khóa thẻ{% else %}Kích hoạt lại thẻ{% endif %}">
+                                        <i class="bi {% if card.is_active %}bi-lock-fill{% else %}bi-unlock-fill{% endif %}"></i>
+                                        {{ 'Khóa' if card.is_active else 'Mở' }}
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="bi bi-award fs-1 d-block mb-2 text-secondary"></i>
+                            Chưa có thẻ khách hàng thân thiết nào được cấp.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 {% endblock %}

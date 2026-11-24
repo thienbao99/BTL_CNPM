@@ -1,96 +1,108 @@
-
 {% extends 'layout/base.html' %}
 
 {% block title %}
-Đặt phòng hát
+Danh sách đặt phòng - KaraokeApp
 {% endblock %}
 
 {% block content %}
-
-<div class="container mt-4">
-
-    <h2 class="text-center mb-4">
-        ĐĂNG KÝ ĐẶT PHÒNG HÁT
-    </h2>
-
-    <div class="card shadow p-4">
-
-        <form method="POST">
-
-            <div class="mb-3">
-                <label class="form-label">Họ tên khách hàng</label>
-                <input type="text"
-                       name="customer_name"
-                       class="form-control"
-                       required>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Số điện thoại</label>
-                <input type="text"
-                       name="customer_phone"
-                       class="form-control">
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Chọn phòng hát</label>
-
-                <select name="room_id" class="form-select" required>
-
-                    {% for room in rooms %}
-
-                    <option value="{{ room.id }}">
-                        {{ room.room_name }}
-                        - {{ room.hourly_price }} VNĐ/giờ
-                    </option>
-
-                    {% endfor %}
-
-                </select>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Số lượng khách</label>
-
-                <input type="number"
-                       name="guest_count"
-                       class="form-control"
-                       min="1"
-                       max="15"
-                       required>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Thời gian bắt đầu</label>
-
-                <input type="datetime-local"
-                       name="start_time"
-                       class="form-control"
-                       required>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Thời gian kết thúc</label>
-
-                <input type="datetime-local"
-                       name="end_time"
-                       class="form-control"
-                       required>
-            </div>
-
-            <button type="submit" class="btn btn-primary">
-                Xác nhận đặt phòng
-            </button>
-
-            <a href="{{ url_for('room.index') }}"
-               class="btn btn-secondary">
-                Quay lại
+<div class="container my-4">
+    <!-- Tiêu đề và nút thêm mới -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #24152f;">
+                <i class="bi bi-calendar-check-fill me-2 text-primary"></i>DANH SÁCH ĐẶT PHÒNG HÁT
+            </h2>
+            <p class="text-muted mb-0">Theo dõi trạng thái đặt trước, đang hát và lịch sử phòng</p>
+        </div>
+        <div class="mt-2 mt-md-0">
+            <a href="{{ url_for('booking_create') }}" class="btn btn-primary fw-semibold">
+                <i class="bi bi-plus-circle-fill me-1"></i> Đăng ký đặt phòng
             </a>
-
-        </form>
-
+        </div>
     </div>
 
+    <!-- Bảng danh sách đặt phòng -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3">
+            <span class="fw-bold text-secondary">
+                <i class="bi bi-list-ul me-1"></i> Tổng số lượt đặt: <strong>{{ bookings|length }}</strong>
+            </span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center" style="width: 70px;">Mã</th>
+                        <th>Phòng hát</th>
+                        <th>Khách hàng</th>
+                        <th>Số điện thoại</th>
+                        <th>Thời gian bắt đầu</th>
+                        <th>Thời gian kết thúc</th>
+                        <th class="text-center">Số khách</th>
+                        <th class="text-center">Trạng thái</th>
+                        <th class="text-end">Hóa đơn</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in bookings %}
+                    <tr>
+                        <td class="text-center fw-bold text-muted">#{{ b.id }}</td>
+                        <td>
+                            <strong class="text-primary">{{ b.room.room_name if b.room else '---' }}</strong>
+                            <small class="text-muted d-block">{{ b.room.room_type if b.room else '' }}</small>
+                        </td>
+                        <td>
+                            {% if b.customer %}
+                                <a href="{{ url_for('customer_detail', customer_id=b.customer.id) }}" class="fw-bold text-decoration-none text-dark">
+                                    {{ b.customer.full_name }}
+                                </a>
+                            {% else %}
+                                <span class="fw-bold">{{ b.customer_name }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="font-monospace text-secondary">{{ b.customer_phone }}</span>
+                        </td>
+                        <td>{{ b.start_time.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>{{ b.end_time.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td class="text-center">
+                            <span class="badge bg-light text-dark border">{{ b.guest_count }} người</span>
+                        </td>
+                        <td class="text-center">
+                            {% if b.status == 'completed' %}
+                                <span class="badge bg-success">Đã hoàn thành</span>
+                            {% elif b.status == 'checked_in' %}
+                                <span class="badge bg-primary">Đang sử dụng</span>
+                            {% elif b.status == 'cancelled' %}
+                                <span class="badge bg-danger">Đã hủy</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Đã đặt trước</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if b.invoice %}
+                                <div class="fw-bold text-danger">
+                                    {{ "{:,.0f}".format(b.invoice.total_amount or 0) }} VNĐ
+                                </div>
+                                <small class="badge {% if b.invoice.status == 'paid' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                                    {{ 'Đã thanh toán' if b.invoice.status == 'paid' else 'Chưa thanh toán' }}
+                                </small>
+                            {% else %}
+                                <span class="text-muted small">Chưa lập</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center py-5 text-muted">
+                            <i class="bi bi-calendar-x fs-1 d-block mb-2 text-secondary"></i>
+                            Hiện tại chưa có lịch đặt phòng nào!
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
-
 {% endblock %}

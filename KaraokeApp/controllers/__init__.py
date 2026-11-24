@@ -1,16 +1,16 @@
-from .auth_controller import auth_bp
-from .room_controller import room_bp
-from .booking_controller import booking_bp
-from .service_controller import service_bp
-from .payment_controller import payment_bp
-from .report_controller import report_bp
-from .customer_controller import customer_bp
+from .auth_controller import init_auth_routes
+from .room_controller import init_room_routes
+from .booking_controller import init_booking_routes
+from .service_controller import init_service_routes
+from .payment_controller import init_payment_routes
+from .report_controller import init_report_routes
+from .customer_controller import init_customer_routes
 
-def register_blueprints(app):
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(room_bp)
-    app.register_blueprint(booking_bp)
-    app.register_blueprint(service_bp)
-    app.register_blueprint(payment_bp)
-    app.register_blueprint(report_bp)
-    app.register_blueprint(customer_bp)
+def init_routes(app):
+    init_auth_routes(app)
+    init_room_routes(app)
+    init_booking_routes(app)
+    init_service_routes(app)
+    init_payment_routes(app)
+    init_report_routes(app)
+    init_customer_routes(app)

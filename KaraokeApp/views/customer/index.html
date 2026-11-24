@@ -1,8 +1,208 @@
-{% extends "layout/base.html" %}
-{% block title %}Khách hàng{% endblock %}
+{% extends 'layout/base.html' %}
+
+{% block title %}
+Quản lý khách hàng - KaraokeApp
+{% endblock %}
+
 {% block content %}
-<h1>Quản lý khách hàng</h1>
-<table><thead><tr><th>Họ tên</th><th>Số điện thoại</th><th>Email</th></tr></thead>
-<tbody>{% for c in customers %}<tr><td>{{ c.full_name }}</td><td>{{ c.phone }}</td><td>{{ c.email or "" }}</td></tr>
-{% else %}<tr><td colspan="3">Chưa có khách hàng.</td></tr>{% endfor %}</tbody></table>
+<div class="container my-4">
+    <!-- Tiêu đề và nút thêm mới -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #24152f;">
+                <i class="bi bi-people-fill me-2 text-primary"></i>QUẢN LÝ KHÁCH HÀNG
+            </h2>
+            <p class="text-muted mb-0">Tra cứu thông tin, lịch sử đặt phòng và quản lý thẻ thân thiết</p>
+        </div>
+        <div class="mt-2 mt-md-0 d-flex gap-2">
+            <a href="{{ url_for('customer_loyalty') }}" class="btn btn-outline-warning text-dark fw-semibold">
+                <i class="bi bi-award-fill me-1 text-warning"></i> Thẻ thân thiết
+            </a>
+            <button type="button" class="btn btn-primary fw-semibold" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+                <i class="bi bi-person-plus-fill me-1"></i> Thêm khách hàng
+            </button>
+        </div>
+    </div>
+
+    <!-- Thanh tìm kiếm -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body bg-light rounded">
+            <form method="GET" action="{{ url_for('customer_index') }}" class="row g-2 align-items-center">
+                <div class="col-md-9 col-12">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+                        <input type="text"
+                               name="q"
+                               value="{{ search_query }}"
+                               class="form-control border-start-0"
+                               placeholder="Tìm kiếm theo tên hoặc số điện thoại khách hàng...">
+                    </div>
+                </div>
+                <div class="col-md-3 col-12 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100 fw-semibold">
+                        <i class="bi bi-search me-1"></i> Tìm kiếm
+                    </button>
+                    {% if search_query %}
+                    <a href="{{ url_for('customer_index') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bảng danh sách khách hàng -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <span class="fw-bold text-secondary">
+                <i class="bi bi-list-ul me-1"></i> Tổng số: <strong>{{ customers|length }}</strong> khách hàng
+                {% if search_query %}
+                    <span class="badge bg-info text-dark ms-2">Kết quả cho: "{{ search_query }}"</span>
+                {% endif %}
+            </span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center" style="width: 60px;">STT</th>
+                        <th>Họ và tên</th>
+                        <th>Số điện thoại</th>
+                        <th>Email</th>
+                        <th class="text-center">Thẻ VIP (Ưu đãi)</th>
+                        <th class="text-center">Số lượt đặt</th>
+                        <th>Ngày tạo</th>
+                        <th class="text-center" style="width: 170px;">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in customers %}
+                    <tr>
+                        <td class="text-center text-muted fw-bold">{{ loop.index }}</td>
+                        <td>
+                            <a href="{{ url_for('customer_detail', customer_id=c.id) }}" class="fw-bold text-decoration-none text-dark">
+                                {{ c.full_name }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border font-monospace">
+                                <i class="bi bi-telephone-fill me-1 text-primary"></i>{{ c.phone }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if c.email %}
+                                <span class="text-secondary"><i class="bi bi-envelope me-1"></i>{{ c.email }}</span>
+                            {% else %}
+                                <span class="text-muted fst-italic">Chưa có</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if c.active_loyalty_card %}
+                                <span class="badge bg-success-subtle text-success border border-success fw-semibold">
+                                    <i class="bi bi-award-fill me-1 text-warning"></i>VIP (Giảm {{ "{:,.0f}".format(c.active_loyalty_card.discount_percent or 0) }}%)
+                                </span>
+                                <small class="d-block text-muted font-monospace mt-1">{{ c.active_loyalty_card.card_code }}</small>
+                            {% else %}
+                                <span class="badge bg-light text-muted border">Chưa có thẻ</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-primary rounded-pill px-2 py-1">
+                                {{ c.bookings|length }} lượt
+                            </span>
+                        </td>
+                        <td class="text-muted small">
+                            {{ c.created_at.strftime('%d/%m/%Y %H:%M') if c.created_at else '---' }}
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('customer_detail', customer_id=c.id) }}"
+                                   class="btn btn-outline-info text-dark"
+                                   title="Xem chi tiết & lịch sử">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ url_for('customer_edit', customer_id=c.id) }}"
+                                   class="btn btn-outline-warning text-dark"
+                                   title="Chỉnh sửa">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form method="POST"
+                                      action="{{ url_for('customer_delete', customer_id=c.id) }}"
+                                      onsubmit="return confirm('Bạn có chắc chắn muốn xóa khách hàng \'{{ c.full_name }}\' không?');"
+                                      style="display: inline-block;">
+                                    <button type="submit"
+                                            class="btn btn-outline-danger"
+                                            title="Xóa khách hàng">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
+                            Không tìm thấy khách hàng nào phù hợp!
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Thêm Khách Hàng Mới -->
+<div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('customer_create') }}">
+                <div class="modal-header text-white" style="background-color: #24152f;">
+                    <h5 class="modal-title" id="addCustomerModalLabel">
+                        <i class="bi bi-person-plus-fill me-2"></i>Thêm Khách Hàng Mới
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Họ và tên <span class="text-danger">*</span></label>
+                        <input type="text"
+                               name="full_name"
+                               class="form-control"
+                               placeholder="Ví dụ: Nguyễn Văn An"
+                               required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Số điện thoại <span class="text-danger">*</span></label>
+                        <input type="tel"
+                               name="phone"
+                               class="form-control"
+                               placeholder="Ví dụ: 0912345678"
+                               pattern="[0-9]{9,12}"
+                               title="Số điện thoại gồm 9-12 chữ số"
+                               required>
+                        <div class="form-text">Số điện thoại là duy nhất để nhận diện khách hàng và tích điểm thẻ thân thiết.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Email</label>
+                        <input type="email"
+                               name="email"
+                               class="form-control"
+                               placeholder="Ví dụ: an.nguyen@example.com">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary fw-semibold">
+                        <i class="bi bi-check-circle me-1"></i> Lưu thông tin
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}

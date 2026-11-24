@@ -1,14 +1,239 @@
-{% extends "layout/base.html" %}
-{% block title %}Đặt phòng hát{% endblock %}
+{% extends 'layout/base.html' %}
+
+{% block title %}
+Đăng ký đặt phòng hát - KaraokeApp
+{% endblock %}
+
 {% block content %}
-<h1>Đặt phòng hát</h1>
-<form method="post" class="form">
-  <label>Họ tên khách hàng<input name="customer_name" required></label>
-  <label>Số điện thoại<input name="customer_phone"></label>
-  <label>Phòng hát<select name="room_id" required>{% for room in rooms %}<option value="{{ room.id }}">{{ room.room_name }} – {{ room.hourly_price }} đ/giờ</option>{% endfor %}</select></label>
-  <label>Số lượng khách<input type="number" name="guest_count" min="1" max="15" required></label>
-  <label>Thời gian bắt đầu<input type="datetime-local" name="start_time" required></label>
-  <label>Thời gian kết thúc<input type="datetime-local" name="end_time" required></label>
-  <button type="submit">Xác nhận đặt phòng</button>
-</form>
+<div class="container my-4" style="max-width: 720px;">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('room_index') }}" class="text-decoration-none">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('booking_index') }}" class="text-decoration-none">Đặt phòng</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Tạo lịch đặt</li>
+        </ol>
+    </nav>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header text-white py-3" style="background-color: #24152f;">
+            <h4 class="fw-bold mb-0">
+                <i class="bi bi-calendar-plus-fill me-2"></i>ĐĂNG KÝ ĐẶT PHÒNG HÁT
+            </h4>
+        </div>
+        <div class="card-body p-4">
+            <form method="POST" id="bookingForm">
+                <!-- Khu vực Số điện thoại và Họ tên khách hàng -->
+                <div class="p-3 bg-light rounded border mb-3">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-person-badge-fill me-1"></i> THÔNG TIN KHÁCH HÀNG
+                    </h6>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Số điện thoại khách hàng <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white"><i class="bi bi-telephone-fill text-muted"></i></span>
+                            <input type="tel"
+                                   id="customer_phone"
+                                   name="customer_phone"
+                                   value="{{ prefill_phone }}"
+                                   class="form-control"
+                                   placeholder="Nhập số điện thoại (ví dụ: 0900000001)..."
+                                   pattern="[0-9]{9,12}"
+                                   title="Số điện thoại gồm 9-12 chữ số"
+                                   autocomplete="off"
+                                   required>
+                            <button type="button" class="btn btn-outline-secondary" id="btnCheckPhone" title="Tra cứu">
+                                <i class="bi bi-search"></i> Kiểm tra
+                            </button>
+                        </div>
+                        <div id="phone-feedback" class="mt-2"></div>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold">
+                            Họ tên khách hàng <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white"><i class="bi bi-person-fill text-muted"></i></span>
+                            <input type="text"
+                                   id="customer_name"
+                                   name="customer_name"
+                                   value="{{ prefill_name }}"
+                                   class="form-control"
+                                   placeholder="Nhập họ và tên khách hàng..."
+                                   required>
+                        </div>
+                        <div id="name-feedback" class="form-text"></div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Chọn phòng hát <span class="text-danger">*</span></label>
+                    <select name="room_id" id="room_id" class="form-select" required>
+                        <option value="">-- Chọn phòng hát phù hợp --</option>
+                        {% for room in rooms %}
+                        <option value="{{ room.id }}" {% if prefill_room_id == room.id %}selected{% endif %}>
+                            {{ room.room_name }} ({{ room.room_type }}) - Sức chứa: {{ room.capacity }} người - {{ "{:,.0f}".format(room.hourly_price or 0) }} đ/giờ
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Số lượng khách <span class="text-danger">*</span></label>
+                    <input type="number"
+                           name="guest_count"
+                           class="form-control"
+                           min="1"
+                           max="15"
+                           value="4"
+                           required>
+                    <div class="form-text">Số khách từ 1 đến tối đa 15 người và không vượt quá sức chứa phòng.</div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6 col-12">
+                        <label class="form-label fw-semibold">Thời gian bắt đầu <span class="text-danger">*</span></label>
+                        <input type="datetime-local"
+                               name="start_time"
+                               class="form-control"
+                               required>
+                    </div>
+
+                    <div class="col-md-6 col-12">
+                        <label class="form-label fw-semibold">Thời gian kết thúc <span class="text-danger">*</span></label>
+                        <input type="datetime-local"
+                               name="end_time"
+                               class="form-control"
+                               required>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{{ url_for('booking_index') }}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Quay lại
+                    </a>
+                    <button type="submit" class="btn btn-primary fw-semibold">
+                        <i class="bi bi-check-circle me-1"></i> Xác nhận đặt phòng
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const phoneInput = document.getElementById("customer_phone");
+    const nameInput = document.getElementById("customer_name");
+    const phoneFeedback = document.getElementById("phone-feedback");
+    const nameFeedback = document.getElementById("name-feedback");
+    const btnCheck = document.getElementById("btnCheckPhone");
+
+    let timeoutId = null;
+
+    function checkCustomer(phone) {
+        phone = phone.trim();
+        if (!phone || phone.length < 9) {
+            phoneFeedback.innerHTML = "";
+            nameFeedback.innerHTML = "Nhập họ tên cho khách hàng.";
+            nameInput.readOnly = false;
+            nameInput.classList.remove("bg-light");
+            return;
+        }
+
+        phoneFeedback.innerHTML = `
+            <div class="text-muted small">
+                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                Đang kiểm tra số điện thoại...
+            </div>
+        `;
+
+        fetch(`{{ url_for('booking_lookup_customer') }}?phone=${encodeURIComponent(phone)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.found) {
+                    nameInput.value = data.full_name;
+                    nameInput.readOnly = true;
+                    nameInput.classList.add("bg-light");
+
+                    let vipBadge = data.is_vip 
+                        ? `<span class="badge bg-warning text-dark ms-2"><i class="bi bi-award-fill"></i> Thẻ VIP (Giảm ${data.discount_percent}%)</span>`
+                        : `<span class="badge bg-secondary-subtle text-secondary ms-2">${data.booking_count} lượt hát</span>`;
+
+                    phoneFeedback.innerHTML = `
+                        <div class="alert alert-success py-2 px-3 mb-0 d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-check-circle-fill me-1 text-success"></i>
+                                <strong>Khách hàng thành viên:</strong> ${data.full_name}
+                                ${vipBadge}
+                            </div>
+                            <button type="button" class="btn btn-sm btn-link text-decoration-none p-0" id="btnUnlockName">
+                                <i class="bi bi-unlock"></i> Đổi số khác
+                            </button>
+                        </div>
+                    `;
+
+                    nameFeedback.innerHTML = `
+                        <span class="text-success small fw-semibold">
+                            <i class="bi bi-lock-fill me-1"></i>Đã tự động điền và khóa theo hồ sơ thành viên (tránh nhầm lẫn tên người khác).
+                        </span>
+                    `;
+
+                    document.getElementById("btnUnlockName")?.addEventListener("click", () => {
+                        phoneInput.value = "";
+                        nameInput.value = "";
+                        nameInput.readOnly = false;
+                        nameInput.classList.remove("bg-light");
+                        phoneFeedback.innerHTML = "";
+                        nameFeedback.innerHTML = "Vui lòng nhập số điện thoại khác.";
+                        phoneInput.focus();
+                    });
+
+                } else {
+                    nameInput.readOnly = false;
+                    nameInput.classList.remove("bg-light");
+
+                    phoneFeedback.innerHTML = `
+                        <div class="alert alert-info py-2 px-3 mb-0">
+                            <i class="bi bi-person-plus-fill me-1 text-primary"></i>
+                            <strong>Số điện thoại mới:</strong> Vui lòng nhập họ tên khách hàng dưới đây để hệ thống tự động lưu vào danh sách khách hàng mới.
+                        </div>
+                    `;
+
+                    nameFeedback.innerHTML = `
+                        <span class="text-primary small">
+                            <i class="bi bi-info-circle me-1"></i>Khách hàng mới sẽ được tạo hồ sơ tự động khi xác nhận đặt phòng.
+                        </span>
+                    `;
+                }
+            })
+            .catch(err => {
+                phoneFeedback.innerHTML = `<span class="text-danger small">Lỗi khi tra cứu số điện thoại.</span>`;
+            });
+    }
+
+    phoneInput.addEventListener("input", function () {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+            checkCustomer(phoneInput.value);
+        }, 350);
+    });
+
+    phoneInput.addEventListener("change", function () {
+        checkCustomer(phoneInput.value);
+    });
+
+    btnCheck.addEventListener("click", function () {
+        checkCustomer(phoneInput.value);
+    });
+
+    if (phoneInput.value.trim().length >= 9) {
+        checkCustomer(phoneInput.value);
+    }
+});
+</script>
 {% endblock %}

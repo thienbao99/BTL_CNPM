@@ -1,0 +1,278 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}
+Chi tiết khách hàng - {{ customer.full_name }}
+{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <!-- Breadcrumb điều hướng -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('room_index') }}" class="text-decoration-none">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('customer_index') }}" class="text-decoration-none">Khách hàng</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ customer.full_name }}</li>
+        </ol>
+    </nav>
+
+    <!-- Header thông tin chính -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white shadow-sm"
+                         style="width: 64px; height: 64px; font-size: 26px; background-color: #24152f;">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <div>
+                        <h3 class="fw-bold mb-1">{{ customer.full_name }}</h3>
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <span class="badge bg-light text-dark border">
+                                <i class="bi bi-telephone-fill me-1 text-primary"></i>{{ customer.phone }}
+                            </span>
+                            {% if customer.email %}
+                            <span class="badge bg-light text-secondary border">
+                                <i class="bi bi-envelope me-1"></i>{{ customer.email }}
+                            </span>
+                            {% endif %}
+                            <span class="badge bg-secondary-subtle text-secondary">
+                                <i class="bi bi-calendar-check me-1"></i>Gia nhập: {{ customer.created_at.strftime('%d/%m/%Y') if customer.created_at else '---' }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('customer_edit', customer_id=customer.id) }}" class="btn btn-outline-warning text-dark fw-semibold">
+                        <i class="bi bi-pencil-square me-1"></i> Chỉnh sửa
+                    </a>
+                    <a href="{{ url_for('booking_create') }}" class="btn btn-primary fw-semibold">
+                        <i class="bi bi-calendar-plus me-1"></i> Đặt phòng mới
+                    </a>
+                    <form method="POST"
+                          action="{{ url_for('customer_delete', customer_id=customer.id) }}"
+                          onsubmit="return confirm('Bạn có chắc chắn muốn xóa khách hàng \'{{ customer.full_name }}\' không?');"
+                          class="d-inline">
+                        <button type="submit" class="btn btn-outline-danger" title="Xóa khách hàng">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thông tin Thẻ thân thiết & Thống kê tháng -->
+    <div class="row g-4 mb-4">
+        <!-- Card tiến độ thẻ thân thiết -->
+        <div class="col-lg-6 col-12">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold mb-0 text-primary">
+                        <i class="bi bi-award-fill me-2 text-warning"></i>TIÊU CHUẨN THẺ THÂN THIẾT (THÁNG {{ current_month }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted">Tiến độ tích lũy lượt hát trong tháng:</span>
+                        <span class="fw-bold fs-5 text-dark">
+                            {{ monthly_bookings }} / 10 lượt
+                        </span>
+                    </div>
+
+                    {% set progress_percent = (monthly_bookings / 10 * 100) if monthly_bookings < 10 else 100 %}
+                    <div class="progress mb-3" style="height: 14px;">
+                        <div class="progress-bar {% if monthly_bookings >= 10 %}bg-success{% else %}bg-primary progress-bar-striped progress-bar-animated{% endif %}"
+                             role="progressbar"
+                             style="width: {{ progress_percent }}%;"
+                             aria-valuenow="{{ monthly_bookings }}"
+                             aria-valuemin="0"
+                             aria-valuemax="10">
+                            {{ progress_percent|round|int }}%
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-light rounded mb-3">
+                        <small class="text-muted d-block">
+                            <i class="bi bi-info-circle me-1 text-primary"></i>
+                            <strong>Quy tắc nghiệp vụ:</strong> Khách hàng tích lũy từ <strong>10 lượt hát trong tháng</strong> sẽ được cấp thẻ thân thiết giảm giá <strong>5%</strong> trên toàn bộ hóa đơn.
+                        </small>
+                    </div>
+
+                    {% if active_loyalty %}
+                        <div class="alert alert-success d-flex justify-content-between align-items-center mb-0">
+                            <div>
+                                <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+                                <strong>Đang sở hữu thẻ VIP:</strong> <code class="fw-bold">{{ active_loyalty.card_code }}</code> (Giảm {{ active_loyalty.discount_percent }}%)
+                            </div>
+                            <form method="POST" action="{{ url_for('customer_toggle_loyalty_status', card_id=active_loyalty.id) }}">
+                                <input type="hidden" name="redirect_to" value="detail">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-pause-circle me-1"></i> Tạm ngưng thẻ
+                                </button>
+                            </form>
+                        </div>
+                    {% else %}
+                        {% if is_eligible_for_loyalty %}
+                            <div class="alert alert-warning mb-3">
+                                <i class="bi bi-star-fill text-warning me-2"></i>
+                                <strong>Chúc mừng!</strong> Khách hàng đã đạt từ 10 lượt hát trong tháng này và đủ điều kiện cấp thẻ VIP 5%.
+                            </div>
+                            <form method="POST" action="{{ url_for('customer_issue_loyalty', customer_id=customer.id) }}">
+                                <button type="submit" class="btn btn-success fw-bold w-100 py-2">
+                                    <i class="bi bi-gift-fill me-2"></i> Cấp thẻ thân thiết VIP (Giảm 5%) ngay
+                                </button>
+                            </form>
+                        {% else %}
+                            <p class="text-muted mb-3">
+                                Còn thiếu <strong>{{ 10 - monthly_bookings if monthly_bookings < 10 else 0 }}</strong> lượt đặt phòng nữa trong tháng này để tự động đủ chuẩn cấp thẻ VIP.
+                            </p>
+                            <form method="POST"
+                                  action="{{ url_for('customer_issue_loyalty', customer_id=customer.id) }}"
+                                  onsubmit="return confirm('Khách hàng chưa đủ 10 lượt trong tháng. Bạn có chắc muốn cấp thẻ ưu tiên đặc cách không?');">
+                                <button type="submit" class="btn btn-outline-primary w-100">
+                                    <i class="bi bi-plus-circle me-1"></i> Cấp thẻ thân thiết trước (Đặc cách)
+                                </button>
+                            </form>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Card tổng quan thống kê -->
+        <div class="col-lg-6 col-12">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="bi bi-bar-chart-fill me-2 text-info"></i>TỔNG QUAN HOẠT ĐỘNG
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 text-center">
+                        <div class="col-6">
+                            <div class="p-3 border rounded bg-light">
+                                <div class="text-muted small">Tổng số lần đặt</div>
+                                <div class="fs-2 fw-bold text-primary">{{ total_bookings }}</div>
+                                <small class="text-muted">lượt hát</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 border rounded bg-light">
+                                <div class="text-muted small">Lượt tháng {{ current_month }}</div>
+                                <div class="fs-2 fw-bold text-success">{{ monthly_bookings }}</div>
+                                <small class="text-muted">lượt hát</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lịch sử thẻ thân thiết nếu có nhiều thẻ -->
+                    <div class="mt-4">
+                        <h6 class="fw-bold text-secondary mb-2">
+                            <i class="bi bi-card-checklist me-1"></i>Danh sách thẻ thành viên đã cấp:
+                        </h6>
+                        {% if customer.loyalty_cards %}
+                            <ul class="list-group list-group-flush border rounded">
+                                {% for card in customer.loyalty_cards %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <code class="fw-bold">{{ card.card_code }}</code>
+                                        <span class="badge bg-info-subtle text-info ms-2">-{{ card.discount_percent }}%</span>
+                                        <small class="text-muted d-block">Ngày cấp: {{ card.issued_at.strftime('%d/%m/%Y') }}</small>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        {% if card.is_active %}
+                                            <span class="badge bg-success">Hoạt động</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Tạm ngừng</span>
+                                        {% endif %}
+                                        <form method="POST" action="{{ url_for('customer_toggle_loyalty_status', card_id=card.id) }}">
+                                            <input type="hidden" name="redirect_to" value="detail">
+                                            <button type="submit" class="btn btn-sm btn-link p-0 text-decoration-none">
+                                                {{ 'Khóa' if card.is_active else 'Kích hoạt' }}
+                                            </button>
+                                        </form>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-muted small mb-0">Khách hàng chưa từng được cấp thẻ nào.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bảng lịch sử đặt phòng -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0 text-dark">
+                <i class="bi bi-clock-history me-2 text-primary"></i>LỊCH SỬ ĐẶT PHÒNG HÁT
+            </h5>
+            <span class="badge bg-light text-dark border">{{ bookings|length }} lượt</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center">Mã</th>
+                        <th>Phòng hát</th>
+                        <th>Thời gian bắt đầu</th>
+                        <th>Thời gian kết thúc</th>
+                        <th class="text-center">Số khách</th>
+                        <th class="text-center">Trạng thái</th>
+                        <th class="text-end">Hóa đơn</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in bookings %}
+                    <tr>
+                        <td class="text-center fw-bold text-muted">#{{ b.id }}</td>
+                        <td>
+                            <strong class="text-primary">{{ b.room.room_name if b.room else '---' }}</strong>
+                            <small class="text-muted d-block">{{ b.room.room_type if b.room else '' }}</small>
+                        </td>
+                        <td>{{ b.start_time.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>{{ b.end_time.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td class="text-center">
+                            <span class="badge bg-light text-dark border">{{ b.guest_count }} người</span>
+                        </td>
+                        <td class="text-center">
+                            {% if b.status == 'completed' %}
+                                <span class="badge bg-success">Đã hoàn thành</span>
+                            {% elif b.status == 'checked_in' %}
+                                <span class="badge bg-primary">Đang sử dụng</span>
+                            {% elif b.status == 'cancelled' %}
+                                <span class="badge bg-danger">Đã hủy</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Đã đặt trước</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if b.invoice %}
+                                <div class="fw-bold text-danger">
+                                    {{ "{:,.0f}".format(b.invoice.total_amount or 0) }} VNĐ
+                                </div>
+                                <small class="badge {% if b.invoice.status == 'paid' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                                    {{ 'Đã thanh toán' if b.invoice.status == 'paid' else 'Chưa thanh toán' }}
+                                </small>
+                            {% else %}
+                                <span class="text-muted small">Chưa lập</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            <i class="bi bi-calendar-x fs-2 d-block mb-2 text-secondary"></i>
+                            Khách hàng này chưa có lượt đặt phòng nào.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

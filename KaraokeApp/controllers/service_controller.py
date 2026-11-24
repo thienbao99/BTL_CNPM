@@ -1,14 +1,13 @@
-from flask import Blueprint, render_template
+from flask import render_template
 from models import Service
 
-service_bp = Blueprint("service", __name__, url_prefix="/services")
+def init_service_routes(app):
+    @app.route("/services/")
+    def service_index():
+        services = Service.query.order_by(Service.category, Service.service_name).all()
+        return render_template("service/index.html", services=services)
 
-@service_bp.route("/")
-def index():
-    services = Service.query.order_by(Service.category, Service.service_name).all()
-    return render_template("service/index.html", services=services)
-
-@service_bp.route("/manage")
-def manage():
-    services = Service.query.order_by(Service.service_name).all()
-    return render_template("service/manage.html", services=services)
+    @app.route("/services/manage")
+    def service_manage():
+        services = Service.query.order_by(Service.service_name).all()
+        return render_template("service/manage.html", services=services)
